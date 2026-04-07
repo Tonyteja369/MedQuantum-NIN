@@ -21,7 +21,7 @@ const PriorityBadgeVariants: Record<string, 'danger' | 'warning' | 'info' | 'suc
   low: 'success',
 }
 
-function RecommendationItem_({ item, index }: { item: RecommendationItem; index: number }) {
+function RecommendationRow({ item, index }: { item: RecommendationItem; index: number }) {
   const priorityColor = priorityColors[item.priority]
   const categoryColor = categoryColors[item.category as keyof typeof categoryColors] ?? '#00d4ff'
 
@@ -79,7 +79,7 @@ export function RecommendationsCard() {
 
       <div className="space-y-2">
         {sorted.map((item, i) => (
-          <RecommendationItem_ key={i} item={item} index={i} />
+          <RecommendationRow key={i} item={item} index={i} />
         ))}
       </div>
     </GlassCard>

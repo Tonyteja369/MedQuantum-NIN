@@ -84,11 +84,7 @@ export default function UploadDashboard() {
         quantumEnhanced: true,
       }
       setAnalysisResult(demoResult)
-      // Navigate via the store + react-router
-      window.location.hash = '/analysis'
-      // Use proper navigation:
-      import('react-router-dom').then(({ useNavigate }) => {}).catch(() => {})
-      // Directly push
+      // Navigate via demo-navigate custom event (handled by DemoNavigationHandler in App.tsx)
       window.dispatchEvent(new CustomEvent('demo-navigate', { detail: '/analysis' }))
       return
     }
