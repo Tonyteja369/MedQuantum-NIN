@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Node.js / Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+*.local
+
+# Vite
+.vite/
