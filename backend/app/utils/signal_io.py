@@ -1,5 +1,6 @@
 import uuid
 import json
+import re
 import numpy as np
 from pathlib import Path
 
@@ -7,6 +8,16 @@ import wfdb
 from loguru import logger
 
 from app.core.config import settings
+
+_UUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+)
+
+
+def _validate_signal_id(signal_id: str) -> None:
+    """Raise ValueError if signal_id is not a valid UUID v4 string."""
+    if not _UUID_RE.match(signal_id):
+        raise ValueError(f"Invalid signal_id format: {signal_id!r}")
 
 
 def load_wfdb_record(record_name: str) -> tuple[np.ndarray, dict]:
@@ -70,6 +81,7 @@ def save_temp_signal(signal: np.ndarray, metadata: dict) -> str:
 
 def load_temp_signal(signal_id: str) -> tuple[np.ndarray, dict]:
     """Load a previously saved temp signal."""
+    _validate_signal_id(signal_id)
     temp_dir = Path(settings.temp_dir)
     npy_path = temp_dir / f"{signal_id}.npy"
     json_path = temp_dir / f"{signal_id}.json"
@@ -85,6 +97,7 @@ def load_temp_signal(signal_id: str) -> tuple[np.ndarray, dict]:
 
 def delete_temp_signal(signal_id: str) -> bool:
     """Delete temp signal files. Returns True if deleted."""
+    _validate_signal_id(signal_id)
     temp_dir = Path(settings.temp_dir)
     deleted = False
     for ext in [".npy", ".json"]:
