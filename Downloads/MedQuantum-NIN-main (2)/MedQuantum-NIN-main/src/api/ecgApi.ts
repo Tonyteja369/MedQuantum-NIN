@@ -193,12 +193,14 @@ export async function analyzeECG(request: AnalysisRequest): Promise<AnalysisResu
 
   for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt += 1) {
     try {
+      console.log('[REQUEST START]', request)
       const { data } = await api.post<BackendAnalysisResult>('/analysis/analyze', {
         signal_id: request.fileId,
       })
 
       return adaptAnalysisResult(data)
     } catch (error) {
+      console.log('[ERROR STACK]', error)
       lastError = error
 
       if (attempt === ANALYSIS_MAX_ATTEMPTS || !shouldRetryAnalysis(error)) {

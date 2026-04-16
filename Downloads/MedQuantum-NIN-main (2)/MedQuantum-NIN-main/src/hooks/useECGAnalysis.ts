@@ -12,7 +12,11 @@ export function useECGAnalysis() {
   const analysisResult = useECGStore((s) => s.analysisResult)
 
   const analyzeMutation = useMutation({
-    mutationFn: (request: AnalysisRequest) => analyzeECG(request),
+    mutationFn: (request: AnalysisRequest) => {
+      console.log('[MUTATION PENDING]', analyzeMutation.isPending)
+      console.log('[REQUEST START]', request)
+      return analyzeECG(request)
+    },
     onSuccess: (result) => {
       const uploadState = useECGStore.getState().uploadState
       setAnalysisResult({
@@ -34,6 +38,7 @@ export function useECGAnalysis() {
 
   const runAnalysis = (fileId: string, patientInfo?: PatientInfo) => {
     if (analyzeMutation.isPending) {
+      console.log('[MUTATION PENDING]', true)
       return
     }
 
@@ -47,7 +52,11 @@ export function useECGAnalysis() {
         modelVersion: 'v2.1',
       },
     }
-    analyzeMutation.mutate(request)
+    analyzeMutation.mutate(request, {
+      onError: (error) => {
+        console.log('[ERROR STACK]', error)
+      },
+    })
   }
 
   const generateSOAPReport = () => {
