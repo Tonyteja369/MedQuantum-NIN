@@ -4,7 +4,7 @@ python-multipart==0.0.22
 pydantic==2.7.0
 pydantic-settings==2.3.0
 neurokit2==0.2.7
-scipy==1.13.0
+scipy==1.11.4
 numpy==1.26.4
 wfdb==4.1.2
 pandas==2.2.2
