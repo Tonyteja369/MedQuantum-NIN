@@ -104,11 +104,10 @@ export interface UploadResult {
 
 /**
  * Axios instance for all ECG API calls.
- * Routes to /api/* endpoints which are served by the FastAPI backend on the same domain.
- * No environment variables needed - works on both dev (localhost) and production (Vercel).
+ * Uses an environment-driven backend URL to support split frontend/backend deployment.
  */
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 60_000,
   headers: {
     'Content-Type': 'application/json',
