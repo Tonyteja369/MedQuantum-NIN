@@ -102,33 +102,18 @@ export interface UploadResult {
   quality: SignalQuality
 }
 
+/**
+ * Axios instance for all ECG API calls.
+ * Routes to /api/* endpoints which are served by the FastAPI backend on the same domain.
+ * No environment variables needed - works on both dev (localhost) and production (Vercel).
+ */
 const api = axios.create({
-  baseURL: resolveApiBaseUrl(import.meta.env.VITE_API_URL),
+  baseURL: '/api',
   timeout: 60_000,
   headers: {
     'Content-Type': 'application/json',
   },
 })
-
-function resolveApiBaseUrl(rawUrl: string | undefined): string {
-  const value = (rawUrl ?? '').trim()
-
-  if (!value) {
-    if (import.meta.env.DEV) {
-      return '/api'
-    }
-
-    throw new Error(
-      'VITE_API_URL is required in production. Configure it in Vercel Project Settings.'
-    )
-  }
-
-  if (/^https?:\/\/[^/]+$/i.test(value)) {
-    return `${value}/api`
-  }
-
-  return value.replace(/\/$/, '')
-}
 
 api.interceptors.request.use(
   (config) => config,
@@ -168,7 +153,15 @@ export async function uploadECGFile(
     },
   })
 
-  return adaptUploadResult(data)
+  return adaptSignalResult(data)
+}
+
+export async function loadWFDBSample(recordName: string): Promise<UploadResult> {
+  const { data } = await api.post<BackendECGSignal>('/ecg/load-sample', {
+    record_name: recordName,
+  })
+
+  return adaptSignalResult(data)
 }
 
 const ANALYSIS_MAX_ATTEMPTS = 3
@@ -232,7 +225,7 @@ export async function generateReport(
   return adaptReportResult(data)
 }
 
-function adaptUploadResult(response: BackendECGSignal): UploadResult {
+function adaptSignalResult(response: BackendECGSignal): UploadResult {
   const preview = response.leads.map((lead) => ({
     lead: lead.name as ECGSignal['lead'],
     data: lead.signal,
