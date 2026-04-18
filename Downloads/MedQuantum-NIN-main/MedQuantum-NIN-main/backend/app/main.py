@@ -15,6 +15,7 @@ from app.routers import analysis, ecg, report
 async def lifespan(app: FastAPI):
     # Startup
     settings.create_directories()
+    app.state.signals = {}
     logger.info(f"MedQuantum-NIN API v{settings.model_version} starting")
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"CORS origins: {settings.allowed_origins_list}")
@@ -50,6 +51,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
+    allow_origin_regex=settings.allowed_origin_regex or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,12 +65,7 @@ app.include_router(report.router)
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {
-        "status": "ok",
-        "version": settings.model_version,
-        "environment": settings.environment,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    return {"status": "ok"}
 
 
 @app.get("/", tags=["Health"])

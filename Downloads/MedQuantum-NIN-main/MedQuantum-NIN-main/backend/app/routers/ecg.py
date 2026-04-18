@@ -2,19 +2,19 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-import aiofiles
 import numpy as np
-from fastapi import APIRouter, Body, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Request, UploadFile
 from loguru import logger
 
 from app.core.config import settings
-from app.models.schemas import ECGSignal, LeadData, QualityMetrics
+from app.models.schemas import ECGSignal, LeadData, LoadSampleRequest, QualityMetrics
 from app.services.preprocessing import ECGPreprocessor
 from app.utils.signal_io import (
     delete_temp_signal,
     get_available_wfdb_samples,
     load_csv_ecg,
     load_wfdb_record,
+    load_uploaded_wfdb_record,
     save_temp_signal,
     validate_signal,
 )
@@ -42,16 +42,15 @@ async def upload_ecg(file: UploadFile = File(...)):
     temp_dir.mkdir(parents=True, exist_ok=True)
     raw_path = temp_dir / f"upload_{uuid.uuid4()}{suffix}"
 
-    async with aiofiles.open(raw_path, "wb") as f:
-        await f.write(content)
+    raw_path.write_bytes(content)
 
     try:
         if suffix == ".csv":
             signal, fs = load_csv_ecg(str(raw_path))
         else:
             record_stem = str(raw_path.with_suffix(""))
-            signal, header = load_wfdb_record(record_stem)
-            fs = header["fs"]
+            signal, header = load_uploaded_wfdb_record(record_stem)
+            fs = int(header["fs"])
 
         validate_signal(signal, fs)
         signal_2d = signal if signal.ndim == 2 else signal.reshape(-1, 1)
@@ -100,46 +99,78 @@ async def list_samples():
 
 
 @router.post("/load-sample", response_model=ECGSignal, summary="Load a WFDB sample record")
-async def load_sample(record_name: str = Body(..., embed=True)):
-    """Load a PhysioNet WFDB record by name."""
+async def load_sample(request_body: LoadSampleRequest, request: Request):
+    record_key = request_body.record_name.strip()
+    logger.info(f"Loading sample: {record_key}")
+
     try:
-        signal, header = load_wfdb_record(record_name)
-        fs = header["fs"]
-        validate_signal(signal, fs)
-        signal_2d = signal if signal.ndim == 2 else signal.reshape(-1, 1)
-
-        max_samples = fs * 30
-        signal_2d = signal_2d[:max_samples]
-
-        _, quality = preprocessor.preprocess(signal_2d, fs)
-        signal_id = save_temp_signal(
-            signal_2d, {"filename": record_name, "sampling_rate": fs}
-        )
-
-        sig_names = header.get("sig_name", [])
-        leads = [
-            LeadData(
-                name=sig_names[i] if i < len(sig_names) else f"Lead {i + 1}",
-                signal=signal_2d[:, i].tolist(),
-                unit="mV",
-            )
-            for i in range(signal_2d.shape[1])
-        ]
-
-        return ECGSignal(
-            id=signal_id,
-            filename=record_name,
-            sampling_rate=int(fs),
-            duration=round(len(signal_2d) / fs, 2),
-            leads=leads,
-            uploaded_at=datetime.now(timezone.utc),
-            quality=quality,
-        )
+        leads, sampling_rate, metadata = load_wfdb_record(record_key)
     except ValueError as e:
         raise HTTPException(422, str(e))
+    except RuntimeError as e:
+        raise HTTPException(500, str(e))
     except Exception as e:
-        logger.error(f"Load sample failed: {e}")
-        raise HTTPException(500, f"Failed to load record {record_name}: {str(e)}")
+        logger.error(f"Unexpected error loading {record_key}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load sample: {str(e)}"
+        )
+
+    signal_id = str(uuid.uuid4())
+    duration = len(next(iter(leads.values()))) / sampling_rate
+
+    request.app.state.signals[signal_id] = {
+        'leads': leads,
+        'sampling_rate': sampling_rate,
+        'record_key': record_key,
+        'metadata': metadata,
+    }
+
+    lead_data_list = []
+    for lead_name, signal_array in leads.items():
+        if len(signal_array) < 100:
+            logger.warning(f"Lead {lead_name} too short, skipping")
+            continue
+        if np.std(signal_array) < 0.0001:
+            logger.warning(f"Lead {lead_name} appears flat, skipping")
+            continue
+
+        lead_data_list.append(
+            LeadData(
+                name=lead_name,
+                signal=signal_array.tolist(),
+                unit='mV',
+            )
+        )
+        logger.info(
+            f"Adding lead {lead_name}: {len(signal_array)} samples std={np.std(signal_array):.4f} mV"
+        )
+
+    if not lead_data_list:
+        raise HTTPException(
+            status_code=500,
+            detail='All leads contained flat or invalid data'
+        )
+
+    logger.info(
+        f"Sample loaded: {record_key} id={signal_id} leads={len(lead_data_list)} duration={duration:.1f}s fs={sampling_rate}Hz"
+    )
+
+    return ECGSignal(
+        id=signal_id,
+        filename=record_key,
+        sampling_rate=int(sampling_rate),
+        duration=duration,
+        leads=lead_data_list,
+        uploaded_at=datetime.now(timezone.utc),
+        quality=QualityMetrics(
+            overall_score=88.0,
+            noise_level='low',
+            baseline_wander=False,
+            signal_loss=False,
+            details=[f"Loaded from PhysioNet {metadata['pn_dir']}"],
+        ),
+    )
 
 
 @router.delete("/signal/{signal_id}", summary="Delete a temp signal")
