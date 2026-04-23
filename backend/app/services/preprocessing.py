@@ -92,6 +92,10 @@ class ECGPreprocessor:
     def compute_quality_metrics(self, sig: np.ndarray, fs: int) -> QualityMetrics:
         scores = []
         details = []
+        snr_values = []
+        clipping_ratios = []
+        flatline_ratios = []
+        noise_vars = []
 
         for ch in range(sig.shape[1]):
             channel = sig[:, ch]
@@ -99,8 +103,10 @@ class ECGPreprocessor:
             # SNR estimation
             signal_power = np.var(channel)
             noise_proxy = np.var(np.diff(channel)) / 2
+            noise_vars.append(float(noise_proxy))
             if noise_proxy > 0 and signal_power > 0:
                 snr = 10 * np.log10(signal_power / max(noise_proxy, 1e-10))
+                snr_values.append(float(snr))
                 snr_score = min(100, max(0, (snr + 10) * 5))
             else:
                 snr_score = 50.0
@@ -113,6 +119,7 @@ class ECGPreprocessor:
                 if max_val > 0
                 else 0
             )
+            clipping_ratios.append(float(clip_ratio))
             if clip_ratio > 0.01:
                 details.append(
                     f"Channel {ch}: possible clipping ({clip_ratio * 100:.1f}%)"
@@ -121,6 +128,7 @@ class ECGPreprocessor:
 
             # Flat line detection
             flat_ratio = np.sum(np.abs(np.diff(channel)) < 1e-6) / len(channel)
+            flatline_ratios.append(float(flat_ratio))
             if flat_ratio > 0.1:
                 details.append(
                     f"Channel {ch}: flat line detected ({flat_ratio * 100:.1f}%)"
@@ -140,6 +148,7 @@ class ECGPreprocessor:
             noise_level = "high"
 
         baseline_wander = False
+        baseline_wander_power = None
         if len(sig) > 10:
             try:
                 sos_lf = scipy_signal.butter(
@@ -151,6 +160,8 @@ class ECGPreprocessor:
                 if total_power > 0 and lf_power / total_power > 0.3:
                     baseline_wander = True
                     details.append("Baseline wander detected")
+                if total_power > 0:
+                    baseline_wander_power = float(lf_power / total_power)
             except Exception:
                 pass
 
@@ -165,4 +176,14 @@ class ECGPreprocessor:
             baseline_wander=baseline_wander,
             signal_loss=signal_loss,
             details=details,
+            snr_db=float(np.mean(snr_values)) if snr_values else None,
+            clipping_ratio=float(np.mean(clipping_ratios))
+            if clipping_ratios
+            else None,
+            flatline_ratio=float(np.mean(flatline_ratios))
+            if flatline_ratios
+            else None,
+            noise_variance=float(np.mean(noise_vars)) if noise_vars else None,
+            baseline_wander_power=baseline_wander_power,
+            non_finite_ratio=nan_ratio,
         )

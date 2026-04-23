@@ -51,6 +51,7 @@ class ClinicalRuleEngine:
             condition="Sinus Tachycardia",
             confidence=round(confidence, 3),
             severity=severity,
+            source="rule",
             supporting_features=[
                 f"Heart rate: {f.heart_rate:.1f} bpm (>100 bpm threshold)"
             ],
@@ -84,6 +85,7 @@ class ClinicalRuleEngine:
             condition="Sinus Bradycardia",
             confidence=round(confidence, 3),
             severity=severity,
+            source="rule",
             supporting_features=[
                 f"Heart rate: {f.heart_rate:.1f} bpm (<60 bpm threshold)"
             ],
@@ -114,6 +116,7 @@ class ClinicalRuleEngine:
             condition="Possible Atrial Fibrillation",
             confidence=round(confidence, 3),
             severity=severity,
+            source="rule",
             supporting_features=[
                 f"RR interval CV: {cv:.3f} (>0.2 threshold)",
                 f"Mean HR: {f.heart_rate:.1f} bpm",
@@ -158,6 +161,7 @@ class ClinicalRuleEngine:
             condition="QT Prolongation",
             confidence=round(confidence, 3),
             severity=severity,
+            source="rule",
             supporting_features=[
                 f"QTc: {f.qtc_interval:.1f} ms (threshold {threshold:.0f} ms, Bazett formula)"
             ],
@@ -189,6 +193,7 @@ class ClinicalRuleEngine:
             condition="Bundle Branch Block (Possible)",
             confidence=round(confidence, 3),
             severity="warning",
+            source="rule",
             supporting_features=[
                 f"QRS duration: {f.qrs_duration:.1f} ms (>120 ms threshold)"
             ],
@@ -220,6 +225,7 @@ class ClinicalRuleEngine:
             condition="First-Degree AV Block",
             confidence=round(confidence, 3),
             severity=severity,
+            source="rule",
             supporting_features=[
                 f"PR interval: {f.pr_interval:.1f} ms (>200 ms threshold)"
             ],
@@ -278,6 +284,7 @@ class ClinicalRuleEngine:
             condition="Normal Sinus Rhythm",
             confidence=0.92,
             severity="normal",
+            source="rule",
             supporting_features=[
                 "HR within normal range",
                 "Regular rhythm",

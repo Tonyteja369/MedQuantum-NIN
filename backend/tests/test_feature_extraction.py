@@ -83,3 +83,15 @@ def test_missing_feature_handling(extractor, short_signal):
         assert features is not None
     except Exception as e:
         pytest.fail(f"Feature extraction raised unexpected exception: {e}")
+
+
+def test_feature_catalog_size(extractor, synthetic_ecg_75bpm):
+    features = extractor.extract_features(synthetic_ecg_75bpm, FS)
+    data = features.model_dump()
+    assert len(data) >= 50, "Feature set should include at least 50 parameters"
+    non_null = [
+        k
+        for k, v in data.items()
+        if k != "rr_intervals" and v is not None and not isinstance(v, list)
+    ]
+    assert len(non_null) >= 20, "Expected at least 20 populated feature values"
