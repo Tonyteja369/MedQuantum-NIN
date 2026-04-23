@@ -35,6 +35,10 @@ def _generate_soap_note(
         f"RR Std Dev: {f.rr_std:.1f} ms",
         f"HR Variability (SDNN): {f.hr_variability:.2f} ms",
     ]
+    if f.rr_rmssd:
+        objective_lines.append(f"RMSSD: {f.rr_rmssd:.1f} ms")
+    if f.freq_lf_hf_ratio:
+        objective_lines.append(f"LF/HF Ratio: {f.freq_lf_hf_ratio:.2f}")
     if f.pr_interval:
         objective_lines.append(f"PR Interval: {f.pr_interval:.1f} ms")
     if f.qrs_duration:
@@ -43,6 +47,10 @@ def _generate_soap_note(
         objective_lines.append(f"QT Interval: {f.qt_interval:.1f} ms")
     if f.qtc_interval:
         objective_lines.append(f"QTc (Bazett): {f.qtc_interval:.1f} ms")
+    if f.st_segment_deviation is not None:
+        objective_lines.append(f"ST Deviation: {f.st_segment_deviation:.2f} mV")
+    if f.quality_score is not None:
+        objective_lines.append(f"Signal Quality: {f.quality_score:.1f}/100")
     objective = "Extracted ECG metrics:\n" + "\n".join(
         f"  • {line}" for line in objective_lines
     )
@@ -84,6 +92,10 @@ def _generate_clinician_summary(result: AnalysisResult) -> str:
         f"  HR: {f.heart_rate:.1f} bpm | RR: {f.rr_mean:.1f}±{f.rr_std:.1f} ms | "
         f"HRV: {f.hr_variability:.1f} ms\n"
     )
+    if f.rr_rmssd:
+        summary += f"  RMSSD: {f.rr_rmssd:.1f} ms"
+    if f.freq_lf_hf_ratio:
+        summary += f" | LF/HF: {f.freq_lf_hf_ratio:.2f}"
     if f.pr_interval:
         summary += f"  PR: {f.pr_interval:.1f} ms"
     if f.qrs_duration:

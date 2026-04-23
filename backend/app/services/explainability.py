@@ -1,7 +1,14 @@
 import numpy as np
 from loguru import logger
 
-from app.models.schemas import DiagnosisResult, ECGFeatures, ReasoningStep
+from app.models.schemas import (
+    DiagnosisResult,
+    ECGFeatures,
+    ExplainabilitySummary,
+    FeatureContribution,
+    ReasoningStep,
+)
+from app.services.feature_catalog import get_feature_spec
 
 
 CALIBRATION_FACTORS = {
@@ -23,6 +30,13 @@ FEATURE_CLINICAL_NAMES = {
     "qt_interval": "QT Interval",
     "qtc_interval": "Corrected QT (Bazett)",
     "hr_variability": "Heart Rate Variability (SDNN)",
+    "rr_rmssd": "RMSSD",
+    "rr_pnn50": "pNN50",
+    "freq_lf_hf_ratio": "LF/HF Ratio",
+    "st_segment_deviation": "ST Deviation",
+    "axis_qrs": "QRS Axis",
+    "ectopy_irregularity": "RR Irregularity Index",
+    "quality_score": "Signal Quality Score",
 }
 
 
@@ -41,9 +55,11 @@ class ExplainabilityEngine:
             dx_copy.confidence = self._calibrate_confidence(
                 dx_copy.condition, dx_copy.confidence
             )
-            dx_copy.supporting_features = self._feature_importance_ranking(
-                features, dx_copy
-            )
+            dx_copy.supporting_features = self._feature_importance_ranking(features, dx_copy)
+            if not dx_copy.feature_contributions:
+                dx_copy.feature_contributions = self._feature_contributions(
+                    features, dx_copy
+                )
             enhanced.append(dx_copy)
 
         logger.debug(f"Explainability trace generated for {len(enhanced)} diagnoses")
@@ -123,6 +139,74 @@ class ExplainabilityEngine:
                 cname = FEATURE_CLINICAL_NAMES.get(key, key)
                 result.append(f"{cname}: {val:.1f}")
         return result if result else dx.supporting_features
+
+    def _feature_contributions(
+        self, features: ECGFeatures, dx: DiagnosisResult
+    ) -> list[FeatureContribution]:
+        feature_dict = features.model_dump()
+        importance_map = {
+            "Sinus Tachycardia": ["heart_rate", "rr_mean", "rr_std"],
+            "Sinus Bradycardia": ["heart_rate", "rr_mean", "rr_std"],
+            "Possible Atrial Fibrillation": [
+                "ectopy_irregularity",
+                "rr_std",
+                "hr_variability",
+            ],
+            "QT Prolongation": ["qtc_interval", "qt_interval", "rr_mean"],
+            "Bundle Branch Block (Possible)": ["qrs_duration", "pr_interval"],
+            "First-Degree AV Block": ["pr_interval", "heart_rate"],
+            "Normal Sinus Rhythm": [
+                "heart_rate",
+                "rr_mean",
+                "rr_std",
+                "pr_interval",
+                "qrs_duration",
+            ],
+        }
+        keys = importance_map.get(dx.condition, [])
+        contributions: list[FeatureContribution] = []
+        for key in keys:
+            val = feature_dict.get(key)
+            if not isinstance(val, (int, float)):
+                continue
+            spec = get_feature_spec(key)
+            normal_range = spec.normal_range if spec else None
+            direction = "neutral"
+            contribution = 0.0
+            if normal_range:
+                low, high = normal_range
+                if val < low:
+                    direction = "negative"
+                elif val > high:
+                    direction = "positive"
+                span = (high - low) or 1.0
+                contribution = (val - (low + high) / 2) / span
+            contributions.append(
+                FeatureContribution(
+                    feature=key,
+                    value=round(val, 2),
+                    contribution=round(contribution, 3),
+                    direction=direction,
+                    source=dx.source,
+                )
+            )
+        return contributions
+
+    def build_summary(
+        self, diagnoses: list[DiagnosisResult], overall_risk: str
+    ) -> ExplainabilitySummary:
+        top_contribs = []
+        for dx in diagnoses:
+            top_contribs.extend(dx.feature_contributions[:2])
+        summary = (
+            f"Explainability summary: {len(diagnoses)} diagnoses, "
+            f"overall risk {overall_risk}."
+        )
+        return ExplainabilitySummary(
+            overall_summary=summary,
+            top_contributions=top_contribs[:5],
+            engine_notes={},
+        )
 
     def _counterfactual_explanation(
         self, features: ECGFeatures, dx: DiagnosisResult

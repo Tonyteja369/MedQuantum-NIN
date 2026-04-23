@@ -1,0 +1,53 @@
+{
+  "model_version": "1.0.0",
+  "conditions": {
+    "Sinus Tachycardia": {
+      "intercept": -2.0,
+      "threshold": 0.6,
+      "severity": "warning",
+      "weights": {
+        "heart_rate": 0.06,
+        "rr_mean": -0.003
+      },
+      "recommendations": [
+        "Review clinical context for tachycardia triggers"
+      ]
+    },
+    "Sinus Bradycardia": {
+      "intercept": -1.5,
+      "threshold": 0.6,
+      "severity": "warning",
+      "weights": {
+        "heart_rate": -0.05,
+        "rr_mean": 0.002
+      },
+      "recommendations": [
+        "Assess symptoms and medication effects"
+      ]
+    },
+    "Possible Atrial Fibrillation": {
+      "intercept": -1.2,
+      "threshold": 0.55,
+      "severity": "warning",
+      "weights": {
+        "ectopy_irregularity": 3.0,
+        "rr_std": 0.01
+      },
+      "recommendations": [
+        "Consider rhythm monitoring for confirmation"
+      ]
+    },
+    "QT Prolongation": {
+      "intercept": -1.3,
+      "threshold": 0.6,
+      "severity": "critical",
+      "weights": {
+        "qtc_interval": 0.01,
+        "qt_interval": 0.005
+      },
+      "recommendations": [
+        "Review QT-prolonging medications"
+      ]
+    }
+  }
+}

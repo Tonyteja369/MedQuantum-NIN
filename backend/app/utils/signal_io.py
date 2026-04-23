@@ -134,8 +134,15 @@ def validate_signal(signal: np.ndarray, sampling_rate: int) -> None:
     duration = n_samples / sampling_rate
     if duration < 2.0:
         raise ValueError(f"Signal too short: {duration:.1f}s. Minimum 2 seconds required")
-    if duration > 3600:
-        raise ValueError(f"Signal too long: {duration:.0f}s. Maximum 1 hour")
+    if duration > settings.max_signal_duration_sec:
+        raise ValueError(
+            f"Signal too long: {duration:.0f}s. "
+            f"Maximum {settings.max_signal_duration_sec}s for performance budget"
+        )
+    if signal.shape[1] > settings.max_leads:
+        raise ValueError(
+            f"Too many leads: {signal.shape[1]}. Maximum {settings.max_leads} leads"
+        )
     if np.all(np.isnan(signal)):
         raise ValueError("Signal contains only NaN values")
     finite_ratio = np.sum(np.isfinite(signal)) / signal.size
