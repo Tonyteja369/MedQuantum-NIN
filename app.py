@@ -13,7 +13,9 @@ st.title("🫀 MedQuantum-NIN: Clinical ECG Analysis Dashboard")
 st.markdown("---")
 
 # Setup backend API url
-API_URL = "http://127.0.0.1:8000/analyze"
+# You can set BACKEND_URL in Render. Local fallback is 127.0.0.1:8000
+BACKEND_URL = os.environ.get("BACKEND_URL", "https://your-backend.onrender.com")
+API_URL = f"{BACKEND_URL}/analyze"
 
 # Helper function to get available samples
 @st.cache_data

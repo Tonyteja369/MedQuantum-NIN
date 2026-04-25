@@ -10,6 +10,12 @@ A professional, offline clinical support system designed for cardiologists, rese
 
 ---
 
+## 🔗 Live Demo
+- **Frontend**: https://your-app.onrender.com
+- **API Docs**: https://your-backend.onrender.com/docs
+
+---
+
 ## ✨ Features at a Glance
 
 * 🔬 **Intelligent Filtering**: Real-time High-Pass, Low-Pass, and IIR Notch filtering for clinical-grade signal cleaning.
