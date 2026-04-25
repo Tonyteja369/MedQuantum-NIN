@@ -10,3 +10,4 @@ output/
 .pytest_cache/
 
 node_modules/
+.venv/
