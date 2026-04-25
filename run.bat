@@ -1,0 +1,6 @@
+@echo off
+echo Starting MedQuantum-NIN Backend...
+start uvicorn main:app --reload
+timeout /t 2
+echo Starting Streamlit Frontend...
+streamlit run app.py

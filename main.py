@@ -22,6 +22,10 @@ if not os.path.exists(DATA_DIR):
 def read_root():
     return {"status": "MedQuantum-NIN server running"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "MedQuantum-NIN", "version": "1.0.0"}
+
 @app.get("/samples")
 def list_samples():
     """List available ECG sample files from /data/."""
