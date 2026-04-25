@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+numpy
+scipy
+neurokit2
+matplotlib
+pandas
+python-multipart
