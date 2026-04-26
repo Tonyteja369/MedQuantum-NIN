@@ -9,7 +9,13 @@ class Settings(BaseSettings):
     api_port: int = 8000
     log_level: str = "INFO"
     max_upload_size_mb: int = 50
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = (
+        "http://localhost:5173,"
+        "http://localhost:3000,"
+        "https://med-quantum-nin-jmf9.vercel.app,"
+        "https://medquantum-nin.vercel.app,"
+        "https://med-quantum-nin.vercel.app"
+    )
     wfdb_sample_dir: str = "./data/samples"
     temp_dir: str = "./data/temp"
     model_version: str = "1.0.0"

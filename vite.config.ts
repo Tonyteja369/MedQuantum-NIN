@@ -12,6 +12,14 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    proxy: {
+      // Forward all /api/* calls to backend — eliminates CORS in local dev
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     outDir: 'dist',
@@ -28,3 +36,4 @@ export default defineConfig({
     },
   },
 })
+

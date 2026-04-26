@@ -55,6 +55,14 @@ async def upload_ecg(file: UploadFile = File(...)):
 
         validate_signal(signal, fs)
         signal_2d = signal if signal.ndim == 2 else signal.reshape(-1, 1)
+
+        # Debug: confirm each upload is unique
+        logger.debug(
+            f"Uploaded: file={file.filename!r}, shape={signal_2d.shape}, "
+            f"fs={fs}Hz, duration={len(signal_2d)/fs:.2f}s, "
+            f"first5={signal_2d[:5, 0].tolist()}"
+        )
+
         _, quality = preprocessor.preprocess(signal_2d, fs)
 
         signal_id = save_temp_signal(

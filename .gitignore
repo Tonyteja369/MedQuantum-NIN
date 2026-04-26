@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .env
+.env.production
 *.log
 data/
 output/

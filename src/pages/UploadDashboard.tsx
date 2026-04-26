@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Play, Cpu, AlertCircle } from 'lucide-react'
+import { Play, AlertCircle } from 'lucide-react'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { DropZone } from '@/components/upload/DropZone'
 import { WFDBLoader } from '@/components/upload/WFDBLoader'
@@ -13,83 +13,20 @@ import { ECGSpinner } from '@/components/ui/Spinner'
 import { useECGStore } from '@/store/useECGStore'
 import { useECGAnalysis } from '@/hooks/useECGAnalysis'
 import { useFileUpload } from '@/hooks/useFileUpload'
-import { generateSyntheticECG } from '@/utils/signalUtils'
-import type { AnalysisResult, SignalQuality } from '@/types/ecg.types'
 
 export default function UploadDashboard() {
   const { file, isProcessing, quality } = useECGStore((s) => s.uploadState)
-  const setAnalysisResult = useECGStore((s) => s.setAnalysisResult)
   const { runAnalysis, isAnalyzing, analysisError } = useECGAnalysis()
   const { fileId } = useFileUpload()
-  const [demoMode, setDemoMode] = useState(false)
+  // wfdbFileId is set when a PhysioNet sample is loaded
+  const [wfdbFileId, setWfdbFileId] = useState<string | null>(null)
 
-  const canAnalyze = (file !== null && fileId !== null) || demoMode
+  // Can analyze if we have a real file uploaded OR a WFDB sample loaded
+  const activeFileId = fileId ?? wfdbFileId
+  const canAnalyze = activeFileId !== null && !isProcessing
 
   const handleAnalyze = () => {
-    if (demoMode) {
-      // Inject demo data directly
-      const syntheticData = generateSyntheticECG(360, 10, 72)
-      const demoResult: AnalysisResult = {
-        id: `demo-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        processingTimeMs: 1234,
-        signals: [
-          { lead: 'II', data: syntheticData, samplingRate: 360, duration: 10, units: 'mV' },
-          { lead: 'V1', data: generateSyntheticECG(360, 10, 72), samplingRate: 360, duration: 10, units: 'mV' },
-          { lead: 'V5', data: generateSyntheticECG(360, 10, 72), samplingRate: 360, duration: 10, units: 'mV' },
-        ],
-        quality: {
-          overall: 92,
-          noiseLevel: 28,
-          baselineWander: false,
-          artifactRatio: 0.03,
-          leadQualities: { II: 0.95, V1: 0.88, V5: 0.91 },
-        },
-        metrics: {
-          heartRate: 72,
-          heartRateVariability: 45.2,
-          intervals: { pr: 156, qrs: 92, qt: 400, qtc: 418, rr: 833 },
-          axis: 45,
-          qrsAmplitude: 1.2,
-          stDeviation: 0.05,
-          tWaveAmplitude: 0.4,
-        },
-        diagnoses: [
-          { code: 'I49.9', label: 'Normal Sinus Rhythm', confidence: 0.94, category: 'Normal', icdVersion: '10' },
-          { code: 'R00.0', label: 'Tachycardia, unspecified', confidence: 0.12, category: 'Arrhythmia', icdVersion: '10' },
-        ],
-        primaryDiagnosis: { code: 'I49.9', label: 'Normal Sinus Rhythm', confidence: 0.94, category: 'Normal', icdVersion: '10' },
-        riskLevel: 'normal',
-        riskScore: 12,
-        confidence: 0.94,
-        explainability: [
-          {
-            id: '1', feature: 'QRS Morphology', contribution: 0.72, importance: 0.85,
-            description: 'Normal QRS complex shape',
-            children: [
-              { id: '1a', feature: 'QRS Duration (92ms)', contribution: 0.38, importance: 0.7 },
-              { id: '1b', feature: 'R-wave Amplitude', contribution: 0.34, importance: 0.65 },
-            ],
-          },
-          { id: '2', feature: 'P-wave Presence', contribution: 0.55, importance: 0.75, description: 'Regular P waves preceding each QRS' },
-          { id: '3', feature: 'RR Regularity', contribution: 0.48, importance: 0.68, description: 'Regular RR intervals' },
-          { id: '4', feature: 'ST Segment', contribution: -0.08, importance: 0.4, description: 'Slight baseline deviation' },
-        ],
-        recommendations: [
-          { priority: 'low', category: 'follow-up', text: 'Routine follow-up in 12 months', rationale: 'Normal ECG findings' },
-          { priority: 'low', category: 'lifestyle', text: 'Maintain regular aerobic exercise 150min/week', rationale: 'Preventive cardiac health' },
-          { priority: 'medium', category: 'monitoring', text: 'Monitor blood pressure at each visit', rationale: 'Standard cardiovascular screening' },
-        ],
-        modelVersion: 'v2.1-demo',
-        quantumEnhanced: true,
-      }
-      setAnalysisResult(demoResult)
-      // Navigate via demo-navigate custom event (handled by DemoNavigationHandler in App.tsx)
-      window.dispatchEvent(new CustomEvent('demo-navigate', { detail: '/analysis' }))
-      return
-    }
-
-    if (fileId) runAnalysis(fileId)
+    if (activeFileId) runAnalysis(activeFileId)
   }
 
   return (
@@ -114,31 +51,10 @@ export default function UploadDashboard() {
           {/* Left column */}
           <div className="lg:col-span-2 space-y-5">
             <DropZone />
-            <WFDBLoader onLoad={() => setDemoMode(true)} />
+            <WFDBLoader onLoad={(signalId) => setWfdbFileId(signalId)} />
             <SignalPreviewChart />
 
-            {/* Demo mode banner */}
-            {!file && (
-              <GlassCard padding="sm" animate={false}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Cpu size={16} className="text-[var(--accent-secondary)]" />
-                    <span className="text-[var(--text-secondary)]">No file? Try a demo analysis</span>
-                  </div>
-                  <button
-                    onClick={() => setDemoMode((d) => !d)}
-                    className="text-xs px-3 py-1.5 rounded-md transition-all"
-                    style={{
-                      background: demoMode ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
-                      border: '1px solid rgba(124,58,237,0.3)',
-                      color: '#7c3aed',
-                    }}
-                  >
-                    {demoMode ? '✓ Demo Mode On' : 'Enable Demo'}
-                  </button>
-                </div>
-              </GlassCard>
-            )}
+
           </div>
 
           {/* Right column */}
@@ -189,7 +105,7 @@ export default function UploadDashboard() {
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <Play size={18} />
-                  {demoMode ? 'Run Demo Analysis' : 'Analyze ECG'}
+                  {canAnalyze ? 'Analyze ECG' : 'Upload a file first'}
                 </div>
               )}
             </motion.button>

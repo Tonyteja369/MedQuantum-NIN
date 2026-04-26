@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import RequestLoggingMiddleware, logger
-from app.routers import analysis, ecg, report
+from app.api import analysis, ecg, report
 
 
 @asynccontextmanager
@@ -50,7 +50,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
-    allow_credentials=True,
+    allow_credentials=False,   # file upload doesn't use cookies; True + explicit origins can still fail on Render
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -19,23 +19,41 @@ import { motion } from 'framer-motion'
 
 export function ECGWaveformPanel() {
   const result = useECGStore((s) => s.analysisResult)
+  // Real ECG signal data lives in the upload preview store, not in the analysis result
+  // (backend AnalysisResult returns features/diagnoses, not raw signal arrays)
+  const preview = useECGStore((s) => s.uploadState.preview)
   const [activeLead, setActiveLead] = useState<LeadName>('II')
   const [zoom, setZoom] = useState(false)
 
+  // Use real uploaded signals; fall back to any synthetic signals on result if backend provides them
+  const signals = preview.length > 0 ? preview : (result as unknown as { signals?: typeof preview })?.signals ?? []
+
   const signal = useMemo(
-    () => result?.signals.find((s) => s.lead === activeLead) ?? result?.signals[0],
-    [result, activeLead]
+    () => signals.find((s) => s.lead === activeLead) ?? signals[0],
+    [signals, activeLead]
   )
 
   const chartData = useMemo(() => {
     if (!signal) return []
+    console.debug(`[Waveform] Rendering lead=${signal.lead}, samples=${signal.data.length}, first5=${signal.data.slice(0,5).map(v=>v.toFixed(3)).join(', ')}`)
     return toChartData(signal.data, signal.samplingRate, zoom ? 1200 : 600)
   }, [signal, zoom])
 
   if (!result) return null
 
-  const availableLeads = result.signals.map((s) => s.lead)
+  if (signals.length === 0) {
+    return (
+      <GlassCard padding="sm">
+        <p className="text-sm text-[var(--text-muted)] text-center py-8">
+          No signal data available. Upload an ECG file first.
+        </p>
+      </GlassCard>
+    )
+  }
+
+  const availableLeads = signals.map((s) => s.lead)
   const color = leadColors[signal?.lead ?? 'II'] ?? '#00d4ff'
+
 
   return (
     <GlassCard padding="sm">

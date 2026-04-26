@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone, type Accept } from 'react-dropzone'
 import { useECGStore } from '@/store/useECGStore'
-import { uploadECGFile, previewECGSignal } from '@/api/ecgApi'
+import { uploadECGFile } from '@/api/ecgApi'
 
 const ACCEPTED_TYPES: Accept = {
   'application/octet-stream': ['.dat', '.hea', '.mat', '.edf', '.csv'],
@@ -30,17 +30,24 @@ export function useFileUpload() {
       setUploadProgress(0)
 
       try {
-        const uploadResp = await uploadECGFile(file, (pct) => {
+        console.debug(`[FileUpload] Processing: ${file.name} (${file.size} bytes)`)
+        const result = await uploadECGFile(file, (pct) => {
           setUploadProgress(pct)
         })
-        const id = uploadResp.data.fileId
-        setFileId(id)
 
-        const previewResp = await previewECGSignal(id)
-        setUploadPreview(previewResp.data.signals)
-        setUploadQuality(previewResp.data.quality)
+        console.debug(
+          `[FileUpload] Upload OK: id=${result.signalId}, ` +
+          `leads=${result.signals.length}, ` +
+          `first5=${result.signals[0]?.data.slice(0, 5).map(v => v.toFixed(3)).join(', ')}`
+        )
+
+        setFileId(result.signalId)
+        // Waveform data comes directly from upload — no second round-trip needed
+        setUploadPreview(result.signals)
+        setUploadQuality(result.quality)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Upload failed'
+        console.error('[FileUpload] Error:', message)
         setUploadError(message)
       } finally {
         setUploadProcessing(false)
@@ -48,6 +55,7 @@ export function useFileUpload() {
     },
     [setUploadFile, setUploadPreview, setUploadQuality, setUploadProcessing, setUploadError]
   )
+
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop: (accepted) => {

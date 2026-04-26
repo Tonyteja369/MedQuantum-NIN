@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 
 from app.models.schemas import AnalysisResult, ReportRequest, ReportResponse, SOAPNote
-from app.routers.analysis import _result_cache, run_analysis_pipeline
+from app.api.analysis import _result_cache, run_analysis_pipeline
 
 router = APIRouter(prefix="/api/report", tags=["Report"])
 

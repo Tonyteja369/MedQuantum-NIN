@@ -14,8 +14,12 @@ export function useECGAnalysis() {
   const analyzeMutation = useMutation({
     mutationFn: (request: AnalysisRequest) => analyzeECG(request),
     onSuccess: (response) => {
+      // response is { data: AnalysisResult } from our updated ecgApi
       setAnalysisResult(response.data)
       navigate('/analysis')
+    },
+    onError: (err) => {
+      console.error('[Analysis] Failed:', err)
     },
   })
 
