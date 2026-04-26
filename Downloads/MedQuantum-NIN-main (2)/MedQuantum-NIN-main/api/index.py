@@ -33,7 +33,7 @@ def health():
     return {"status": "ok"}
 
 @app.get("/api/verify")
-def verify_analysis():
+async def verify_analysis():
     """Verify analysis system produces real outputs"""
     import numpy as np
     
