@@ -27,13 +27,23 @@ export default function UploadDashboard() {
   const clearAnalysis = useECGStore((s) => s.clearAnalysis)
   const setAnalysisResult = useECGStore((s) => s.setAnalysisResult)
   const { runAnalysis, isAnalyzing, analysisError } = useECGAnalysis()
-  const [demoMode, setDemoMode] = useState(false)
+  const [demoMode, setDemoMode] = useState(true) // Enable demo mode by default
   const [selectedDemoCase, setSelectedDemoCase] = useState<string>('normal-sinus-rhythm')
   const [loadingSample, setLoadingSample] = useState<string | null>(null)
 
   const hasRealInput = Boolean(fileId)
   const isDemoActive = demoMode && !hasRealInput
   const canAnalyze = hasRealInput || isDemoActive
+
+  // Auto-load first demo case when demo mode is active
+  useEffect(() => {
+    if (demoMode && !hasRealInput) {
+      const demoCases = getAllDemoCases()
+      const selectedCase = demoCases.find((c) => c.id === selectedDemoCase) || demoCases[0]
+      setUploadPreview(selectedCase.analysis.signals)
+      setUploadQuality(selectedCase.quality)
+    }
+  }, [demoMode, selectedDemoCase, hasRealInput])
 
   useEffect(() => {
     if (hasRealInput && demoMode) {
@@ -110,70 +120,66 @@ export default function UploadDashboard() {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Upload ECG</h1>
-            <Badge variant="primary" dot>Ready</Badge>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+              {demoMode ? 'ECG Demo Analysis' : 'Upload ECG'}
+            </h1>
+            {demoMode && <Badge variant="primary">Demo Mode</Badge>}
+            {!demoMode && <Badge variant="primary" dot>Ready</Badge>}
           </div>
           <p className="text-sm text-[var(--text-secondary)]">
-            Upload your ECG recording or load a PhysioNet sample to begin AI analysis.
+            {demoMode 
+              ? 'Select a clinically simulated ECG case to explore AI analysis capabilities.'
+              : 'Upload your ECG recording or load a PhysioNet sample to begin AI analysis.'}
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="lg:col-span-2 space-y-5">
-            <DropZone />
-            <WFDBLoader onLoad={handleSampleLoad} isLoading={Boolean(loadingSample)} />
-            <SignalPreviewChart />
-
-            {/* Demo mode banner */}
-            {!file && !hasRealInput && (
-              <GlassCard padding="sm" animate={false}>
-                <div className="space-y-3">
+            {/* Demo mode selector - shown when demo mode is active */}
+            {demoMode && (
+              <GlassCard padding="md" animate={false}>
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <Cpu size={16} className="text-[var(--accent-secondary)]" />
-                      <span className="text-[var(--text-secondary)]">No file? Try a demo analysis</span>
+                    <div className="flex items-center gap-2.5">
+                      <Cpu size={18} className="text-[var(--accent-secondary)]" />
+                      <h3 className="text-sm font-semibold text-[var(--text-primary)]">Demo Mode – Clinically Simulated ECG</h3>
                     </div>
-                    <button
-                      onClick={() => setDemoMode((d) => !d)}
-                      className="text-xs px-3 py-1.5 rounded-md transition-all"
-                      style={{
-                        background: demoMode ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
-                        border: '1px solid rgba(124,58,237,0.3)',
-                        color: '#7c3aed',
-                      }}
-                    >
-                      {demoMode ? '✓ Demo Mode On' : 'Enable Demo'}
-                    </button>
+                    <Badge variant="primary">Demo</Badge>
                   </div>
                   
-                  {demoMode && (
-                    <div className="space-y-2">
-                      <div className="text-xs text-[var(--text-muted)]">Select demo case:</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {getAllDemoCases().map((demoCase) => (
-                          <button
-                            key={demoCase.id}
-                            onClick={() => setSelectedDemoCase(demoCase.id)}
-                            className={`text-xs px-2 py-1.5 rounded-md transition-all text-left ${
-                              selectedDemoCase === demoCase.id
-                                ? 'bg-[rgba(124,58,237,0.2)] border-[rgba(124,58,237,0.4)] text-[#7c3aed]'
-                                : 'bg-[rgba(124,58,237,0.05)] border-[rgba(124,58,237,0.2)] text-[var(--text-secondary)]'
-                            } border`}
-                          >
-                            <div className="font-medium">{demoCase.name}</div>
-                            <div className="text-[10px] opacity-70">{demoCase.heartRate} BPM</div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="text-[10px] text-[var(--text-muted)] italic">
-                        * Clinically Simulated ECG – Demo Mode
-                      </div>
+                  <div className="space-y-2">
+                    <div className="text-xs text-[var(--text-muted)]">Select demo case:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getAllDemoCases().map((demoCase) => (
+                        <button
+                          key={demoCase.id}
+                          onClick={() => setSelectedDemoCase(demoCase.id)}
+                          className={`text-xs px-3 py-2 rounded-md transition-all text-left ${
+                            selectedDemoCase === demoCase.id
+                              ? 'bg-[rgba(124,58,237,0.2)] border-[rgba(124,58,237,0.4)] text-[#7c3aed]'
+                              : 'bg-[rgba(124,58,237,0.05)] border-[rgba(124,58,237,0.2)] text-[var(--text-secondary)] hover:bg-[rgba(124,58,237,0.1)]'
+                          } border`}
+                        >
+                          <div className="font-medium">{demoCase.name}</div>
+                          <div className="text-[10px] opacity-70">{demoCase.heartRate} BPM</div>
+                        </button>
+                      ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               </GlassCard>
             )}
+
+            {/* Hide upload and sample UI when demo mode is active */}
+            {!demoMode && (
+              <>
+                <DropZone />
+                <WFDBLoader onLoad={handleSampleLoad} isLoading={Boolean(loadingSample)} />
+              </>
+            )}
+            
+            <SignalPreviewChart />
           </div>
 
           {/* Right column */}
