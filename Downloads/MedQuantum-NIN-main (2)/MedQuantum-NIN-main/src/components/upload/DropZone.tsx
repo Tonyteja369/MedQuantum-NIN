@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/Spinner'
 export function DropZone() {
   const { getRootProps, getInputProps, isDragActive, isDragReject, uploadProgress, clearFile } =
     useFileUpload()
-  const { file, isProcessing, error } = useECGStore((s) => s.uploadState)
+  const { file, isProcessing, error, slicingMessages } = useECGStore((s) => s.uploadState)
 
   const borderColor = isDragReject
     ? 'rgba(255,77,109,0.6)'
@@ -128,6 +128,24 @@ export function DropZone() {
             <AlertCircle size={14} className="flex-shrink-0" />
             {error}
           </motion.div>
+        )}
+        
+        {slicingMessages && slicingMessages.length > 0 && (
+          <AnimatePresence>
+            {slicingMessages.map((message, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 p-3 rounded-lg text-sm"
+                style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)', color: '#00d4ff' }}
+              >
+                <AlertCircle size={14} className="flex-shrink-0" />
+                {message}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </AnimatePresence>
     </div>

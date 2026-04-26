@@ -38,6 +38,7 @@ interface ECGStore {
   setSelectedLeads: (leads: LeadName[]) => void
   setUploadProcessing: (processing: boolean) => void
   setUploadError: (error: string | null) => void
+  setUploadSlicingMessages: (messages: string[]) => void
   resetUpload: () => void
 
   // Actions — analysis
@@ -56,6 +57,7 @@ const defaultUploadState: UploadState = {
   selectedLeads: ['I', 'II', 'III', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'],
   isProcessing: false,
   error: null,
+  slicingMessages: [],
 }
 
 export const useECGStore = create<ECGStore>()(
@@ -101,6 +103,8 @@ export const useECGStore = create<ECGStore>()(
           set((state) => ({ uploadState: { ...state.uploadState, isProcessing } })),
         setUploadError: (error) =>
           set((state) => ({ uploadState: { ...state.uploadState, error } })),
+        setUploadSlicingMessages: (slicingMessages) =>
+          set((state) => ({ uploadState: { ...state.uploadState, slicingMessages } })),
         resetUpload: () => set({ uploadState: defaultUploadState }),
 
         // Analysis

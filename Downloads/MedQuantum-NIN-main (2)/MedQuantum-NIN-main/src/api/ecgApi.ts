@@ -12,6 +12,7 @@ import type {
   RiskLevel,
   SignalQuality,
 } from '@/types/ecg.types'
+import { applyMultiLeadSegmentSlicing } from '@/utils/signalUtils'
 
 interface BackendQualityMetrics {
   overall_score: number
@@ -100,6 +101,7 @@ export interface UploadResult {
   filename: string
   preview: ECGSignal[]
   quality: SignalQuality
+  slicingMessages?: string[]
 }
 
 const env = import.meta.env
@@ -244,12 +246,28 @@ export async function generateReport(
 }
 
 function adaptSignalResult(response: BackendECGSignal): UploadResult {
-  const preview = response.leads.map((lead) => ({
+  // Apply segment slicing BEFORE any processing
+  const rawSignals = response.leads.map((lead) => ({
     lead: lead.name as ECGSignal['lead'],
     data: lead.signal,
     samplingRate: response.sampling_rate,
     duration: response.duration,
     units: lead.unit,
+  }))
+  
+  const slicedSignals = applyMultiLeadSegmentSlicing(rawSignals)
+  
+  // Check if any signal was sliced/padded and collect messages
+  const messages = slicedSignals
+    .filter(s => s.message)
+    .map(s => s.message)
+  
+  const preview = slicedSignals.map(signal => ({
+    lead: signal.lead,
+    data: signal.data,
+    samplingRate: signal.samplingRate,
+    duration: signal.duration,
+    units: signal.units,
   }))
 
   return {
@@ -257,6 +275,7 @@ function adaptSignalResult(response: BackendECGSignal): UploadResult {
     filename: response.filename,
     preview,
     quality: adaptQuality(response.quality, response.leads),
+    slicingMessages: messages.length > 0 ? messages : undefined,
   }
 }
 

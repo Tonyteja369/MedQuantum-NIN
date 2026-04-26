@@ -133,6 +133,7 @@ export interface UploadState {
   selectedLeads: LeadName[]
   isProcessing: boolean
   error: string | null
+  slicingMessages: string[]
 }
 
 export interface AppState {

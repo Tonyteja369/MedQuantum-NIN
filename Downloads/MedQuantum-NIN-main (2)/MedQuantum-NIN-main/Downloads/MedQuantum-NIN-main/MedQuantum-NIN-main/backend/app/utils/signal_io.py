@@ -8,6 +8,54 @@ from loguru import logger
 
 from app.core.config import settings
 
+# Constants for signal processing
+MAX_SIGNAL_DURATION_SECONDS = 30
+MIN_SIGNAL_DURATION_SECONDS = 2
+
+
+def apply_signal_segment_slicing(
+    signal: np.ndarray, 
+    sampling_rate: int
+) -> tuple[np.ndarray, bool, bool, str | None]:
+    """
+    Apply segment slicing to ECG signal data
+    Ensures signals are within 2-30 seconds duration
+    Returns: (processed_signal, was_sliced, was_padded, message)
+    """
+    current_duration = signal.shape[0] / sampling_rate
+    max_samples = int(MAX_SIGNAL_DURATION_SECONDS * sampling_rate)
+    min_samples = int(MIN_SIGNAL_DURATION_SECONDS * sampling_rate)
+    
+    processed_signal = signal.copy()
+    was_sliced = False
+    was_padded = False
+    message = None
+
+    # Handle long signals - slice to max duration
+    if signal.shape[0] > max_samples:
+        processed_signal = signal[:max_samples]
+        was_sliced = True
+        message = f"Long ECG detected — displaying first {MAX_SIGNAL_DURATION_SECONDS} seconds"
+    # Handle short signals - pad to min duration
+    elif signal.shape[0] < min_samples:
+        last_value = signal[-1] if signal.shape[0] > 0 else 0.0
+        padding_needed = min_samples - signal.shape[0]
+        
+        # Pad with last value and small noise to avoid flat lines
+        signal_range = np.max(signal) - np.min(signal) if signal.shape[0] > 0 else 1.0
+        noise = np.random.normal(0, signal_range * 0.05, padding_needed)  # ±5% noise
+        
+        if signal.ndim == 1:
+            padding = last_value + noise
+        else:
+            padding = np.tile(last_value, (padding_needed, 1)) + noise.reshape(-1, 1)
+        
+        processed_signal = np.vstack([signal, padding]) if signal.ndim > 1 else np.concatenate([signal, padding])
+        was_padded = True
+        message = f"Short ECG detected — padded to {MIN_SIGNAL_DURATION_SECONDS} seconds"
+
+    return processed_signal, was_sliced, was_padded, message
+
 
 def load_wfdb_record(record_name: str) -> tuple[np.ndarray, dict]:
     """Load a WFDB record. Returns (signal_array shape [samples, leads], header_dict)."""
@@ -21,15 +69,24 @@ def load_wfdb_record(record_name: str) -> tuple[np.ndarray, dict]:
     if signal is None:
         signal = record.d_signal.astype(float) * record.adc_gain[0]
 
+    # Apply segment slicing BEFORE any processing
+    processed_signal, was_sliced, was_padded, message = apply_signal_segment_slicing(signal, record.fs)
+    
+    if message:
+        logger.info(f"WFDB record {record_name}: {message}")
+
     header = {
         "fs": record.fs,
         "n_leads": record.n_sig,
         "sig_name": record.sig_name,
         "units": record.units,
-        "sig_len": record.sig_len,
+        "sig_len": processed_signal.shape[0],  # Update length after slicing
         "record_name": record_name,
+        "was_sliced": was_sliced,
+        "was_padded": was_padded,
+        "slicing_message": message,
     }
-    return signal, header
+    return processed_signal, header
 
 
 def load_csv_ecg(filepath: str) -> tuple[np.ndarray, int]:
@@ -77,7 +134,13 @@ def load_csv_ecg(filepath: str) -> tuple[np.ndarray, int]:
             else:
                 signal[:, col] = 0.0
     
-    return signal, sampling_rate
+    # Apply segment slicing BEFORE any processing
+    processed_signal, was_sliced, was_padded, message = apply_signal_segment_slicing(signal, sampling_rate)
+    
+    if message:
+        logger.info(f"CSV file {filepath}: {message}")
+    
+    return processed_signal, sampling_rate
 
 
 def save_temp_signal(signal: np.ndarray, metadata: dict) -> str:

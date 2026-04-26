@@ -19,27 +19,40 @@ class ECGPreprocessor:
         # Handle signal duration constraints
         sig = self.adjust_signal_length(sig, sampling_rate)
 
-        sig = self.apply_notch_filter(sig, sampling_rate, 50.0)
-        sig = self.apply_notch_filter(sig, sampling_rate, 60.0)
-        t1 = time.time()
-        logger.debug(f"Notch filter: {(t1 - t0) * 1000:.1f}ms")
+        # Check minimum safe length for filtering
+        min_samples_for_filtering = max(8, sampling_rate // 10)  # At least 8 samples or 0.1s worth
+        can_apply_filters = sig.shape[0] >= min_samples_for_filtering
 
-        sig = self.apply_bandpass_filter(sig, sampling_rate)
-        t2 = time.time()
-        logger.debug(f"Bandpass filter: {(t2 - t1) * 1000:.1f}ms")
+        if not can_apply_filters:
+            logger.warning(f"Short signal detected ({sig.shape[0]} samples) — skipping filtering")
 
-        sig = self.correct_baseline(sig, sampling_rate)
-        t3 = time.time()
-        logger.debug(f"Baseline correction: {(t3 - t2) * 1000:.1f}ms")
+        # Only apply filters if signal is long enough
+        if can_apply_filters:
+            try:
+                sig = self.apply_notch_filter(sig, sampling_rate, 50.0)
+                sig = self.apply_notch_filter(sig, sampling_rate, 60.0)
+                t1 = time.time()
+                logger.debug(f"Notch filter: {(t1 - t0) * 1000:.1f}ms")
 
-        sig = self.smooth_signal(sig)
-        t4 = time.time()
-        logger.debug(f"Smoothing: {(t4 - t3) * 1000:.1f}ms")
+                sig = self.apply_bandpass_filter(sig, sampling_rate)
+                t2 = time.time()
+                logger.debug(f"Bandpass filter: {(t2 - t1) * 1000:.1f}ms")
+
+                sig = self.correct_baseline(sig, sampling_rate)
+                t3 = time.time()
+                logger.debug(f"Baseline correction: {(t3 - t2) * 1000:.1f}ms")
+
+                sig = self.smooth_signal(sig)
+                t4 = time.time()
+                logger.debug(f"Smoothing: {(t4 - t3) * 1000:.1f}ms")
+            except Exception as e:
+                logger.warning(f"Filtering failed for short signal: {e} — using raw signal")
+                # Continue with raw signal if filtering fails
 
         quality = self.compute_quality_metrics(sig, sampling_rate)
         logger.info(
             f"Preprocessing complete in {(time.time() - t0) * 1000:.1f}ms, "
-            f"quality={quality.overall_score:.1f}"
+            f"quality={quality.overall_score:.1f}, filters_applied={can_apply_filters}"
         )
 
         return sig, quality
@@ -96,18 +109,42 @@ class ECGPreprocessor:
         return padded
 
     def apply_notch_filter(self, sig: np.ndarray, fs: int, freq: float) -> np.ndarray:
-        b, a = scipy_signal.iirnotch(freq, Q=30, fs=fs)
-        sos = scipy_signal.tf2sos(b, a)
-        return scipy_signal.sosfiltfilt(sos, sig, axis=0)
+        # Safety check for very short signals
+        if sig.shape[0] < 8:
+            logger.warning(f"Signal too short for notch filter ({sig.shape[0]} samples) — skipping")
+            return sig
+            
+        try:
+            b, a = scipy_signal.iirnotch(freq, Q=30, fs=fs)
+            sos = scipy_signal.tf2sos(b, a)
+            return scipy_signal.sosfiltfilt(sos, sig, axis=0)
+        except Exception as e:
+            logger.warning(f"Notch filter failed: {e} — returning original signal")
+            return sig
 
     def apply_bandpass_filter(
         self, sig: np.ndarray, fs: int, lowcut: float = 0.5, highcut: float = 40.0
     ) -> np.ndarray:
+        # Safety check for very short signals
+        if sig.shape[0] < 8:
+            logger.warning(f"Signal too short for bandpass filter ({sig.shape[0]} samples) — skipping")
+            return sig
+            
         nyq = fs / 2
         low = lowcut / nyq
         high = min(highcut / nyq, 0.99)
-        sos = scipy_signal.butter(4, [low, high], btype="band", output="sos")
-        return scipy_signal.sosfiltfilt(sos, sig, axis=0)
+        
+        # Additional safety check for filter parameters
+        if low >= high:
+            logger.warning(f"Invalid filter parameters: low={low} >= high={high} — skipping")
+            return sig
+            
+        try:
+            sos = scipy_signal.butter(4, [low, high], btype="band", output="sos")
+            return scipy_signal.sosfiltfilt(sos, sig, axis=0)
+        except Exception as e:
+            logger.warning(f"Bandpass filter failed: {e} — returning original signal")
+            return sig
 
     def correct_baseline(self, sig: np.ndarray, fs: int) -> np.ndarray:
         """Remove baseline wander using scipy detrend with linear filtering."""
@@ -127,15 +164,24 @@ class ECGPreprocessor:
     def smooth_signal(self, sig: np.ndarray) -> np.ndarray:
         from scipy.signal import savgol_filter
 
+        # Safety check for very short signals
+        if sig.shape[0] < 10:
+            logger.warning(f"Signal too short for smoothing ({sig.shape[0]} samples) — skipping")
+            return sig
+
         result = sig.copy()
         for ch in range(sig.shape[1]):
             window = min(11, len(sig) // 2)
             if window % 2 == 0:
                 window -= 1
             if window >= 5:
-                result[:, ch] = savgol_filter(
-                    sig[:, ch], window_length=window, polyorder=3
-                )
+                try:
+                    result[:, ch] = savgol_filter(
+                        sig[:, ch], window_length=window, polyorder=min(3, window-1)
+                    )
+                except Exception as e:
+                    logger.warning(f"Smoothing failed on channel {ch}: {e} — using original")
+                    # Keep original signal if smoothing fails
         return result
 
     def compute_quality_metrics(self, sig: np.ndarray, fs: int) -> QualityMetrics:

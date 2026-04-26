@@ -24,6 +24,7 @@ export default function UploadDashboard() {
   const setUploadQuality = useECGStore((s) => s.setUploadQuality)
   const setUploadProcessing = useECGStore((s) => s.setUploadProcessing)
   const setUploadError = useECGStore((s) => s.setUploadError)
+  const setUploadSlicingMessages = useECGStore((s) => s.setUploadSlicingMessages)
   const clearAnalysis = useECGStore((s) => s.clearAnalysis)
   const setAnalysisResult = useECGStore((s) => s.setAnalysisResult)
   const { runAnalysis, isAnalyzing, analysisError } = useECGAnalysis()
@@ -57,6 +58,7 @@ export default function UploadDashboard() {
       setUploadFileId(sample.fileId)
       setUploadPreview(sample.preview)
       setUploadQuality(sample.quality)
+      setUploadSlicingMessages(sample.slicingMessages || [])
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load sample record'
       setUploadError(message)

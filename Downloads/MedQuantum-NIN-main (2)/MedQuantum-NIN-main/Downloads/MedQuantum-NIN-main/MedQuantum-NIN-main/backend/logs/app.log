@@ -161,3 +161,135 @@
 2026-04-26 17:52:43 | INFO     | app.main:lifespan:19 - Environment: development
 2026-04-26 17:52:43 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
 2026-04-26 17:52:43 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:52 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:04:59 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:05:04 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:05:44 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:05:44 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:05:44 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:06:21 | INFO     | app.utils.signal_io:load_wfdb_record:76 - WFDB record mitdb/100: Long ECG detected — displaying first 30 seconds
+2026-04-26 18:06:21 | DEBUG    | app.services.preprocessing:preprocess:25 - Notch filter: 12.4ms
+2026-04-26 18:06:21 | DEBUG    | app.services.preprocessing:preprocess:29 - Bandpass filter: 4.9ms
+2026-04-26 18:06:21 | DEBUG    | app.services.preprocessing:preprocess:33 - Baseline correction: 9.2ms
+2026-04-26 18:06:21 | DEBUG    | app.services.preprocessing:preprocess:37 - Smoothing: 7.0ms
+2026-04-26 18:06:21 | INFO     | app.services.preprocessing:preprocess:40 - Preprocessing complete in 36.3ms, quality=100.0
+2026-04-26 18:06:21 | DEBUG    | app.utils.signal_io:save_temp_signal:156 - Saved temp signal 5a3cd7ca-ab1e-43c3-bb4f-0b1a9bb65b82, shape=(10800, 2)
+2026-04-26 18:06:21 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/load-sample ΓåÆ 200 (28624.4ms)
+2026-04-26 18:07:04 | INFO     | app.utils.signal_io:load_wfdb_record:76 - WFDB record mitdb/100: Long ECG detected — displaying first 30 seconds
+2026-04-26 18:07:04 | DEBUG    | app.services.preprocessing:preprocess:25 - Notch filter: 3.0ms
+2026-04-26 18:07:04 | DEBUG    | app.services.preprocessing:preprocess:29 - Bandpass filter: 2.1ms
+2026-04-26 18:07:04 | DEBUG    | app.services.preprocessing:preprocess:33 - Baseline correction: 1.4ms
+2026-04-26 18:07:04 | DEBUG    | app.services.preprocessing:preprocess:37 - Smoothing: 1.2ms
+2026-04-26 18:07:04 | INFO     | app.services.preprocessing:preprocess:40 - Preprocessing complete in 9.4ms, quality=100.0
+2026-04-26 18:07:04 | DEBUG    | app.utils.signal_io:save_temp_signal:156 - Saved temp signal b60a4fc9-da39-4b0b-9dbf-b125b65aed7c, shape=(10800, 2)
+2026-04-26 18:07:04 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/load-sample ΓåÆ 200 (27779.6ms)
+2026-04-26 18:07:39 | INFO     | app.utils.signal_io:load_wfdb_record:76 - WFDB record mitdb/100: Long ECG detected — displaying first 30 seconds
+2026-04-26 18:07:39 | DEBUG    | app.services.preprocessing:preprocess:25 - Notch filter: 1.8ms
+2026-04-26 18:07:39 | DEBUG    | app.services.preprocessing:preprocess:29 - Bandpass filter: 2.0ms
+2026-04-26 18:07:39 | DEBUG    | app.services.preprocessing:preprocess:33 - Baseline correction: 1.4ms
+2026-04-26 18:07:39 | DEBUG    | app.services.preprocessing:preprocess:37 - Smoothing: 2.2ms
+2026-04-26 18:07:39 | INFO     | app.services.preprocessing:preprocess:40 - Preprocessing complete in 9.4ms, quality=100.0
+2026-04-26 18:07:39 | DEBUG    | app.utils.signal_io:save_temp_signal:156 - Saved temp signal 4b5890da-2a1a-4cf4-b678-1968db882f50, shape=(10800, 2)
+2026-04-26 18:07:39 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/load-sample ΓåÆ 200 (26015.8ms)
+2026-04-26 18:07:52 | DEBUG    | app.services.preprocessing:preprocess:25 - Notch filter: 75.5ms
+2026-04-26 18:07:52 | DEBUG    | app.services.preprocessing:preprocess:29 - Bandpass filter: 4.1ms
+2026-04-26 18:07:52 | DEBUG    | app.services.preprocessing:preprocess:33 - Baseline correction: 2.5ms
+2026-04-26 18:07:52 | DEBUG    | app.services.preprocessing:preprocess:37 - Smoothing: 3.5ms
+2026-04-26 18:07:52 | INFO     | app.services.preprocessing:preprocess:40 - Preprocessing complete in 89.3ms, quality=100.0
+2026-04-26 18:07:52 | DEBUG    | app.utils.signal_io:save_temp_signal:156 - Saved temp signal 844e147b-d139-4a96-b283-d29c5b33ed59, shape=(1001, 3)
+2026-04-26 18:07:52 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/upload ΓåÆ 200 (125.9ms)
+2026-04-26 18:08:04 | INFO     | app.utils.signal_io:load_csv_ecg:141 - CSV file data\temp\upload_a80e895b-d279-4123-bc0f-243c70cd8c19.csv: Short ECG detected — padded to 2 seconds
+2026-04-26 18:08:04 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/upload ΓåÆ 422 (27.5ms)
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:34 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:41 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:47 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 18:10:53 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 18:10:58 | INFO     | app.utils.signal_io:load_csv_ecg:141 - CSV file data\temp\upload_3c1337f6-dc2e-459b-bb98-b2226c72ac37.csv: Short ECG detected — padded to 2 seconds
+2026-04-26 18:10:58 | WARNING  | app.services.preprocessing:apply_notch_filter:122 - Notch filter failed: w0 should be such that 0 < w0 < 1 — returning original signal
+2026-04-26 18:10:58 | DEBUG    | app.services.preprocessing:preprocess:35 - Notch filter: 14.1ms
+2026-04-26 18:10:58 | DEBUG    | app.services.preprocessing:preprocess:39 - Bandpass filter: 4.4ms
+2026-04-26 18:10:58 | DEBUG    | app.services.preprocessing:preprocess:43 - Baseline correction: 2.0ms
+2026-04-26 18:10:58 | DEBUG    | app.services.preprocessing:preprocess:47 - Smoothing: 1.5ms
+2026-04-26 18:10:58 | INFO     | app.services.preprocessing:preprocess:53 - Preprocessing complete in 25.2ms, quality=93.2, filters_applied=True
+2026-04-26 18:10:58 | DEBUG    | app.utils.signal_io:save_temp_signal:156 - Saved temp signal b765c451-d648-4d24-b33c-f704546eda72, shape=(200, 1)
+2026-04-26 18:10:58 | INFO     | app.core.logging:dispatch:39 - POST /api/ecg/upload ΓåÆ 200 (47.1ms)
+2026-04-26 18:11:33 | INFO     | app.routers.analysis:run_analysis_pipeline:32 - Starting analysis for signal_id=b765c451-d648-4d24-b33c-f704546eda72
+2026-04-26 18:11:33 | WARNING  | app.services.preprocessing:apply_notch_filter:122 - Notch filter failed: w0 should be such that 0 < w0 < 1 — returning original signal
+2026-04-26 18:11:33 | DEBUG    | app.services.preprocessing:preprocess:35 - Notch filter: 5.6ms
+2026-04-26 18:11:33 | DEBUG    | app.services.preprocessing:preprocess:39 - Bandpass filter: 2.3ms
+2026-04-26 18:11:33 | DEBUG    | app.services.preprocessing:preprocess:43 - Baseline correction: 1.0ms
+2026-04-26 18:11:33 | DEBUG    | app.services.preprocessing:preprocess:47 - Smoothing: 0.8ms
+2026-04-26 18:11:33 | INFO     | app.services.preprocessing:preprocess:53 - Preprocessing complete in 11.5ms, quality=92.5, filters_applied=True
+2026-04-26 18:11:33 | DEBUG    | app.routers.analysis:run_analysis_pipeline:43 - Preprocessing: 12ms
+2026-04-26 18:11:39 | DEBUG    | app.services.feature_extraction:extract_features:19 - Detected 1 R-peaks
+2026-04-26 18:11:39 | INFO     | app.services.feature_extraction:extract_features:53 - Feature extraction complete in 5818.1ms: HR=0.0 bpm
+2026-04-26 18:11:39 | DEBUG    | app.routers.analysis:run_analysis_pipeline:47 - Feature extraction: 5819ms
+2026-04-26 18:11:39 | INFO     | app.services.rule_engine:evaluate:34 - Rule engine: 1 diagnoses, risk=critical
+2026-04-26 18:11:39 | DEBUG    | app.routers.analysis:run_analysis_pipeline:51 - Rule engine: 1ms, 1 diagnoses
+2026-04-26 18:11:39 | INFO     | app.core.logging:dispatch:39 - POST /api/analysis/analyze ΓåÆ 422 (5943.0ms)

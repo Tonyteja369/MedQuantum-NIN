@@ -85,7 +85,7 @@ class MLModelPlaceholder:
                 id=f"ml-{signal_id}-2",
                 condition='Possible Atrial Fibrillation',
                 confidence=0.65,
-                severity='moderate',
+                severity='warning',
                 supporting_features=['rr_intervals', 'hr_variability'],
                 reasoning=[
                     ReasoningStep(

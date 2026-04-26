@@ -2,6 +2,80 @@
  * Signal processing utilities for ECG data
  */
 
+// Constants for signal processing
+export const MAX_SIGNAL_DURATION_SECONDS = 30
+export const MIN_SIGNAL_DURATION_SECONDS = 2
+export const DEFAULT_SAMPLING_RATE_HZ = 250
+export const MIT_BIH_SAMPLING_RATE_HZ = 360
+
+/**
+ * Apply segment slicing to ECG signal data
+ * Ensures signals are within 2-30 seconds duration
+ */
+export function applySignalSegmentSlicing(
+  data: number[],
+  samplingRate: number,
+  duration?: number
+): { data: number[]; wasSliced: boolean; wasPadded: boolean; message?: string } {
+  const currentDuration = duration ?? (data.length / samplingRate)
+  const maxSamples = Math.floor(MAX_SIGNAL_DURATION_SECONDS * samplingRate)
+  const minSamples = Math.floor(MIN_SIGNAL_DURATION_SECONDS * samplingRate)
+  
+  let processedData = [...data]
+  let wasSliced = false
+  let wasPadded = false
+  let message: string | undefined
+
+  // Handle long signals - slice to max duration
+  if (data.length > maxSamples) {
+    processedData = data.slice(0, maxSamples)
+    wasSliced = true
+    message = `Long ECG detected — displaying first ${MAX_SIGNAL_DURATION_SECONDS} seconds`
+  }
+  // Handle short signals - pad to min duration
+  else if (data.length < minSamples) {
+    const lastValue = data[data.length - 1] || 0
+    const paddingNeeded = minSamples - data.length
+    
+    // Pad with last value and small noise to avoid flat lines
+    const padding = Array(paddingNeeded).fill(0).map(() => {
+      const signalRange = Math.max(...data) - Math.min(...data)
+      const noise = (Math.random() - 0.5) * 2 * signalRange * 0.05 // ±5% noise
+      return lastValue + noise
+    })
+    
+    processedData = [...data, ...padding]
+    wasPadded = true
+    message = `Short ECG detected — padded to ${MIN_SIGNAL_DURATION_SECONDS} seconds`
+  }
+
+  return {
+    data: processedData,
+    wasSliced,
+    wasPadded,
+    message
+  }
+}
+
+/**
+ * Apply segment slicing to multi-lead ECG signals
+ */
+export function applyMultiLeadSegmentSlicing(
+  signals: Array<{ lead: string; data: number[]; samplingRate: number; duration?: number }>
+): Array<{ lead: string; data: number[]; samplingRate: number; duration: number; wasSliced: boolean; wasPadded: boolean; message?: string }> {
+  return signals.map(signal => {
+    const result = applySignalSegmentSlicing(signal.data, signal.samplingRate, signal.duration)
+    return {
+      ...signal,
+      data: result.data,
+      duration: result.data.length / signal.samplingRate,
+      wasSliced: result.wasSliced,
+      wasPadded: result.wasPadded,
+      message: result.message
+    }
+  })
+}
+
 /** Normalize signal to [-1, 1] range */
 export function normalizeSignal(data: number[]): number[] {
   if (data.length === 0) return []

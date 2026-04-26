@@ -31,6 +31,7 @@ export function useFileUpload() {
   const setUploadQuality = useECGStore((s) => s.setUploadQuality)
   const setUploadProcessing = useECGStore((s) => s.setUploadProcessing)
   const setUploadError = useECGStore((s) => s.setUploadError)
+  const setUploadSlicingMessages = useECGStore((s) => s.setUploadSlicingMessages)
   const resetUpload = useECGStore((s) => s.resetUpload)
 
   const processFile = useCallback(
@@ -55,6 +56,7 @@ export function useFileUpload() {
 
         setUploadPreview(uploadResp.preview)
         setUploadQuality(uploadResp.quality)
+        setUploadSlicingMessages(uploadResp.slicingMessages || [])
       } catch (err) {
         console.log('[ERROR STACK]', err)
         const message = err instanceof Error ? err.message : 'Upload failed'
@@ -63,7 +65,7 @@ export function useFileUpload() {
         setUploadProcessing(false)
       }
     },
-    [setUploadFile, setUploadFileId, setUploadPreview, setUploadQuality, setUploadProcessing, setUploadError]
+    [setUploadFile, setUploadFileId, setUploadPreview, setUploadQuality, setUploadProcessing, setUploadError, setUploadSlicingMessages]
   )
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
