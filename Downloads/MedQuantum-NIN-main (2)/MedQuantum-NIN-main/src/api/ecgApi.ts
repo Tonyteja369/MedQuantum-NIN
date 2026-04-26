@@ -102,12 +102,29 @@ export interface UploadResult {
   quality: SignalQuality
 }
 
+const env = import.meta.env
+
+const API_BASE_URL = env.VITE_BACKEND_SERVICE_URL ?? env.VITE_API_URL ?? ''
+
+const API_ENDPOINTS = {
+  upload: env.VITE_BACKEND_UPLOAD_PATH ?? '/ecg/upload',
+  loadSample: env.VITE_BACKEND_LOAD_SAMPLE_PATH ?? '/ecg/load-sample',
+  analyze: env.VITE_BACKEND_ANALYZE_PATH ?? '/analysis/analyze',
+  analysisResult: env.VITE_BACKEND_ANALYSIS_RESULT_PATH ?? '/analysis/result',
+  generateReport: env.VITE_BACKEND_REPORT_PATH ?? '/report/generate',
+}
+
+const API_FIELDS = {
+  signalId: env.VITE_BACKEND_SIGNAL_ID_FIELD ?? 'signal_id',
+  patientContext: env.VITE_BACKEND_PATIENT_CONTEXT_FIELD ?? 'patient_context',
+}
+
 /**
  * Axios instance for all ECG API calls.
  * Uses an environment-driven backend URL to support split frontend/backend deployment.
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_BASE_URL,
   timeout: 60_000,
   headers: {
     'Content-Type': 'application/json',
@@ -145,7 +162,7 @@ export async function uploadECGFile(
   const formData = new FormData()
   formData.append('file', file)
 
-  const { data } = await api.post<BackendECGSignal>('/ecg/upload', formData, {
+  const { data } = await api.post<BackendECGSignal>(API_ENDPOINTS.upload, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (e) => {
       if (e.total) onProgress?.(Math.round((e.loaded * 100) / e.total))
@@ -156,7 +173,7 @@ export async function uploadECGFile(
 }
 
 export async function loadWFDBSample(recordName: string): Promise<UploadResult> {
-  const { data } = await api.post<BackendECGSignal>('/ecg/load-sample', {
+  const { data } = await api.post<BackendECGSignal>(API_ENDPOINTS.loadSample, {
     record_name: recordName,
   })
 
@@ -186,8 +203,8 @@ export async function analyzeECG(request: AnalysisRequest): Promise<AnalysisResu
   for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt += 1) {
     try {
       console.log('[REQUEST START]', request)
-      const { data } = await api.post<BackendAnalysisResult>('/analysis/analyze', {
-        signal_id: request.fileId,
+      const { data } = await api.post<BackendAnalysisResult>(API_ENDPOINTS.analyze, {
+        [API_FIELDS.signalId]: request.fileId,
       })
 
       return adaptAnalysisResult(data)
@@ -208,7 +225,9 @@ export async function analyzeECG(request: AnalysisRequest): Promise<AnalysisResu
 }
 
 export async function getAnalysisResult(analysisId: string): Promise<AnalysisResult> {
-  const { data } = await api.get<BackendAnalysisResult>(`/analysis/result/${analysisId}`)
+  const { data } = await api.get<BackendAnalysisResult>(
+    `${API_ENDPOINTS.analysisResult}/${analysisId}`
+  )
   return adaptAnalysisResult(data)
 }
 
@@ -216,9 +235,9 @@ export async function generateReport(
   signalId: string,
   patientInfo?: PatientInfo
 ): Promise<ReportData> {
-  const { data } = await api.post<BackendReportResponse>('/report/generate', {
-    signal_id: signalId,
-    patient_context: patientInfo,
+  const { data } = await api.post<BackendReportResponse>(API_ENDPOINTS.generateReport, {
+    [API_FIELDS.signalId]: signalId,
+    [API_FIELDS.patientContext]: patientInfo,
   })
 
   return adaptReportResult(data)
