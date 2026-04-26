@@ -24,13 +24,103 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Log all registered routes on startup for API contract validation"""
+    print("="*60)
+    print("REGISTERED ROUTES - API CONTRACT VALIDATION")
+    print("="*60)
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            print(f"Route: {route.path} | Methods: {route.methods}")
+    print("="*60)
+
 @app.get("/")
 def root():
     return {"message": "MedQuantum-NIN ECG Analysis API"}
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Health check endpoint - mandatory for API contract"""
+    return {"status": "ok", "api_version": "1.0.0"}
+
+@app.post("/api/ecg/upload")
+async def upload_ecg(file: UploadFile = File(...)):
+    """Upload ECG file endpoint - mandatory for API contract"""
+    try:
+        if not file:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        contents = await file.read()
+        file_size = len(contents)
+        
+        return {
+            "success": True,
+            "message": "File uploaded successfully",
+            "file_info": {
+                "filename": file.filename,
+                "size_bytes": file_size,
+                "size_kb": round(file_size / 1024, 2)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.post("/api/analysis/analyze")
+async def analyze_ecg(file: UploadFile = File(...)):
+    """Analyze ECG file endpoint - mandatory for API contract"""
+    try:
+        if not file:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        # Read uploaded file
+        contents = await file.read()
+        
+        # Parse CSV
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
+            
+            # Extract ECG signal from first non-time column
+            signal_columns = [col for col in df.columns if col.lower() != 'time']
+            if not signal_columns:
+                raise HTTPException(status_code=400, detail="No ECG signal columns found")
+            
+            # Use first available ECG lead
+            ecg_column = signal_columns[0]
+            signal = df[ecg_column].values
+            sampling_rate = 500  # Default sampling rate
+            
+            # Process with real ECG analysis
+            quantum_result = QuantumProcessor.process(signal, sampling_rate)
+            analysis_result = await NINEngine().analyze(quantum_result)
+            
+            return {
+                "success": True,
+                "analysis": {
+                    "heart_rate": analysis_result.features.get("heart_rate", 0),
+                    "diagnoses": [
+                        {
+                            "condition": d.condition,
+                            "confidence": d.confidence,
+                            "severity": d.severity,
+                            "reasoning": [
+                                {"step": r.step_number, "description": r.description}
+                                for r in (d.reasoning_trace or [])
+                            ]
+                        }
+                        for d in analysis_result.diagnoses
+                    ],
+                    "signal_quality": {
+                        "samples_analyzed": len(signal),
+                        "duration_seconds": len(signal) / sampling_rate
+                    }
+                }
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Only CSV files supported")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.get("/api/verify")
 async def verify_analysis():

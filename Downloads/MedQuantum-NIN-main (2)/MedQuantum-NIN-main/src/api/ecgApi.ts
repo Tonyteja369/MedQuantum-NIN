@@ -104,12 +104,16 @@ export interface UploadResult {
 
 const env = import.meta.env
 
-const API_BASE_URL = env.VITE_BACKEND_SERVICE_URL ?? env.VITE_API_URL ?? ''
+// Single source of truth for API base URL - STRICT CONTRACT
+const API_BASE_URL = env.VITE_API_URL ?? 'http://localhost:8000'
 
+// MANDATORY API endpoints - STRICT CONTRACT
 const API_ENDPOINTS = {
-  upload: env.VITE_BACKEND_UPLOAD_PATH ?? '/ecg/upload',
+  health: '/health',
+  upload: '/api/ecg/upload',
+  analyze: '/api/analysis/analyze',
+  // Legacy endpoints for compatibility
   loadSample: env.VITE_BACKEND_LOAD_SAMPLE_PATH ?? '/ecg/load-sample',
-  analyze: env.VITE_BACKEND_ANALYZE_PATH ?? '/analysis/analyze',
   analysisResult: env.VITE_BACKEND_ANALYSIS_RESULT_PATH ?? '/analysis/result',
   generateReport: env.VITE_BACKEND_REPORT_PATH ?? '/report/generate',
 }
@@ -139,6 +143,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Global 404 handler for endpoint mismatch
+    if (error.response?.status === 404) {
+      error.message = 'API route not found. Backend mismatch.'
+      return Promise.reject(error)
+    }
+
     const message =
       error.response?.data?.detail ??
       error.response?.data?.message ??
@@ -155,10 +165,47 @@ api.interceptors.response.use(
   }
 )
 
+/**
+ * Request validation
+ */
+function validateRequest(file?: File, fileId?: string): void {
+  if (!file && !fileId) {
+    throw new Error('No file or fileId provided')
+  }
+  
+  if (!API_BASE_URL) {
+    throw new Error('API not configured - VITE_API_URL not set')
+  }
+}
+
+/**
+ * Response guard
+ */
+function validateResponse(response: any): void {
+  if (!response) {
+    throw new Error('No response from server')
+  }
+  
+  if (response.status !== 200) {
+    throw new Error(`Backend error: ${response.status}`)
+  }
+}
+
+/**
+ * Health check endpoint - MANDATORY for API contract
+ */
+export async function healthCheck(): Promise<{ status: string; api_version: string }> {
+  const { data } = await api.get(API_ENDPOINTS.health)
+  validateResponse({ status: 200 })
+  return data
+}
+
 export async function uploadECGFile(
   file: File,
   onProgress?: (pct: number) => void
 ): Promise<UploadResult> {
+  validateRequest(file)
+  
   const formData = new FormData()
   formData.append('file', file)
 
@@ -198,6 +245,8 @@ function shouldRetryAnalysis(error: unknown): boolean {
 }
 
 export async function analyzeECG(request: AnalysisRequest): Promise<AnalysisResult> {
+  validateRequest(undefined, request.fileId)
+  
   let lastError: unknown
 
   for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt += 1) {

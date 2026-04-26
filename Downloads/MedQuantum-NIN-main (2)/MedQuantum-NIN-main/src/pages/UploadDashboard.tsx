@@ -13,7 +13,7 @@ import { ECGSpinner } from '@/components/ui/Spinner'
 import { useECGStore } from '@/store/useECGStore'
 import { useECGAnalysis } from '@/hooks/useECGAnalysis'
 import { loadWFDBSample } from '@/api/ecgApi'
-import { generateSyntheticECG } from '@/utils/signalUtils'
+import { getAllDemoCases, type DemoCase } from '@/utils/demoECGGenerator'
 import type { AnalysisResult, SignalQuality } from '@/types/ecg.types'
 
 export default function UploadDashboard() {
@@ -28,6 +28,7 @@ export default function UploadDashboard() {
   const setAnalysisResult = useECGStore((s) => s.setAnalysisResult)
   const { runAnalysis, isAnalyzing, analysisError } = useECGAnalysis()
   const [demoMode, setDemoMode] = useState(false)
+  const [selectedDemoCase, setSelectedDemoCase] = useState<string>('normal-sinus-rhythm')
   const [loadingSample, setLoadingSample] = useState<string | null>(null)
 
   const hasRealInput = Boolean(fileId)
@@ -77,64 +78,16 @@ export default function UploadDashboard() {
     })
 
     if (isDemoActive) {
-      // Inject demo data directly
-      const syntheticData = generateSyntheticECG(360, 10, 72)
-      const demoResult: AnalysisResult = {
-        id: `demo-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        processingTimeMs: 1234,
-        signals: [
-          { lead: 'II', data: syntheticData, samplingRate: 360, duration: 10, units: 'mV' },
-          { lead: 'V1', data: generateSyntheticECG(360, 10, 72), samplingRate: 360, duration: 10, units: 'mV' },
-          { lead: 'V5', data: generateSyntheticECG(360, 10, 72), samplingRate: 360, duration: 10, units: 'mV' },
-        ],
-        quality: {
-          overall: 92,
-          noiseLevel: 28,
-          baselineWander: false,
-          artifactRatio: 0.03,
-          leadQualities: { II: 0.95, V1: 0.88, V5: 0.91 },
-        },
-        metrics: {
-          heartRate: 72,
-          heartRateVariability: 45.2,
-          intervals: { pr: 156, qrs: 92, qt: 400, qtc: 418, rr: 833 },
-          axis: 45,
-          qrsAmplitude: 1.2,
-          stDeviation: 0.05,
-          tWaveAmplitude: 0.4,
-        },
-        diagnoses: [
-          { code: 'I49.9', label: 'Normal Sinus Rhythm', confidence: 0.94, category: 'Normal', icdVersion: '10' },
-          { code: 'R00.0', label: 'Tachycardia, unspecified', confidence: 0.12, category: 'Arrhythmia', icdVersion: '10' },
-        ],
-        primaryDiagnosis: { code: 'I49.9', label: 'Normal Sinus Rhythm', confidence: 0.94, category: 'Normal', icdVersion: '10' },
-        riskLevel: 'normal',
-        riskScore: 12,
-        confidence: 0.94,
-        explainability: [
-          {
-            id: '1', feature: 'QRS Morphology', contribution: 0.72, importance: 0.85,
-            description: 'Normal QRS complex shape',
-            children: [
-              { id: '1a', feature: 'QRS Duration (92ms)', contribution: 0.38, importance: 0.7 },
-              { id: '1b', feature: 'R-wave Amplitude', contribution: 0.34, importance: 0.65 },
-            ],
-          },
-          { id: '2', feature: 'P-wave Presence', contribution: 0.55, importance: 0.75, description: 'Regular P waves preceding each QRS' },
-          { id: '3', feature: 'RR Regularity', contribution: 0.48, importance: 0.68, description: 'Regular RR intervals' },
-          { id: '4', feature: 'ST Segment', contribution: -0.08, importance: 0.4, description: 'Slight baseline deviation' },
-        ],
-        recommendations: [
-          { priority: 'low', category: 'follow-up', text: 'Routine follow-up in 12 months', rationale: 'Normal ECG findings' },
-          { priority: 'low', category: 'lifestyle', text: 'Maintain regular aerobic exercise 150min/week', rationale: 'Preventive cardiac health' },
-          { priority: 'medium', category: 'monitoring', text: 'Monitor blood pressure at each visit', rationale: 'Standard cardiovascular screening' },
-        ],
-        modelVersion: 'v2.1-demo',
-        quantumEnhanced: true,
-      }
-      setAnalysisResult(demoResult)
-      // Navigate via demo-navigate custom event (handled by DemoNavigationHandler in App.tsx)
+      // Use high-fidelity demo case
+      const demoCases = getAllDemoCases()
+      const selectedCase = demoCases.find((c) => c.id === selectedDemoCase) || demoCases[0]
+      
+      // Load the demo case into the store
+      setUploadPreview(selectedCase.analysis.signals)
+      setUploadQuality(selectedCase.quality)
+      setAnalysisResult(selectedCase.analysis)
+      
+      // Navigate via demo-navigate custom event
       window.dispatchEvent(new CustomEvent('demo-navigate', { detail: '/analysis' }))
       return
     }
@@ -175,22 +128,49 @@ export default function UploadDashboard() {
             {/* Demo mode banner */}
             {!file && !hasRealInput && (
               <GlassCard padding="sm" animate={false}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Cpu size={16} className="text-[var(--accent-secondary)]" />
-                    <span className="text-[var(--text-secondary)]">No file? Try a demo analysis</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5 text-sm">
+                      <Cpu size={16} className="text-[var(--accent-secondary)]" />
+                      <span className="text-[var(--text-secondary)]">No file? Try a demo analysis</span>
+                    </div>
+                    <button
+                      onClick={() => setDemoMode((d) => !d)}
+                      className="text-xs px-3 py-1.5 rounded-md transition-all"
+                      style={{
+                        background: demoMode ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
+                        border: '1px solid rgba(124,58,237,0.3)',
+                        color: '#7c3aed',
+                      }}
+                    >
+                      {demoMode ? '✓ Demo Mode On' : 'Enable Demo'}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setDemoMode((d) => !d)}
-                    className="text-xs px-3 py-1.5 rounded-md transition-all"
-                    style={{
-                      background: demoMode ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
-                      border: '1px solid rgba(124,58,237,0.3)',
-                      color: '#7c3aed',
-                    }}
-                  >
-                    {demoMode ? '✓ Demo Mode On' : 'Enable Demo'}
-                  </button>
+                  
+                  {demoMode && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-[var(--text-muted)]">Select demo case:</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {getAllDemoCases().map((demoCase) => (
+                          <button
+                            key={demoCase.id}
+                            onClick={() => setSelectedDemoCase(demoCase.id)}
+                            className={`text-xs px-2 py-1.5 rounded-md transition-all text-left ${
+                              selectedDemoCase === demoCase.id
+                                ? 'bg-[rgba(124,58,237,0.2)] border-[rgba(124,58,237,0.4)] text-[#7c3aed]'
+                                : 'bg-[rgba(124,58,237,0.05)] border-[rgba(124,58,237,0.2)] text-[var(--text-secondary)]'
+                            } border`}
+                          >
+                            <div className="font-medium">{demoCase.name}</div>
+                            <div className="text-[10px] opacity-70">{demoCase.heartRate} BPM</div>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-muted)] italic">
+                        * Clinically Simulated ECG – Demo Mode
+                      </div>
+                    </div>
+                  )}
                 </div>
               </GlassCard>
             )}
