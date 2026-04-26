@@ -23,10 +23,15 @@ export default function UploadDashboard() {
   const { runAnalysis, isAnalyzing, analysisError } = useECGAnalysis()
   const [selectedDemoCase, setSelectedDemoCase] = useState<string>('normal-sinus-rhythm')
 
+  // Debug: Log component mount
+  console.log('[UploadDashboard] Component mounted, selectedDemoCase:', selectedDemoCase)
+
   // Auto-load selected demo case
   useEffect(() => {
     const demoCases = getAllDemoCases()
+    console.log('[UploadDashboard] Available demo cases:', demoCases.map(c => ({ id: c.id, name: c.name })))
     const selectedCase = demoCases.find((c) => c.id === selectedDemoCase) || demoCases[0]
+    console.log('[UploadDashboard] Loading case:', selectedCase.name)
     setUploadPreview(selectedCase.analysis.signals)
     setUploadQuality(selectedCase.quality)
     setUploadError(null)
@@ -89,7 +94,10 @@ export default function UploadDashboard() {
                     {getAllDemoCases().map((demoCase) => (
                       <button
                         key={demoCase.id}
-                        onClick={() => setSelectedDemoCase(demoCase.id)}
+                        onClick={() => {
+                          console.log('[Demo Case Clicked]', demoCase.name)
+                          setSelectedDemoCase(demoCase.id)
+                        }}
                         className={`text-xs px-3 py-2 rounded-md transition-all text-left ${
                           selectedDemoCase === demoCase.id
                             ? 'bg-[rgba(124,58,237,0.2)] border-[rgba(124,58,237,0.4)] text-[#7c3aed]'
