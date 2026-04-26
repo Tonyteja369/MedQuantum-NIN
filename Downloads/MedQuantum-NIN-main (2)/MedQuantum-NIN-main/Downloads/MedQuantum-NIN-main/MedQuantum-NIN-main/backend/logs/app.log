@@ -152,3 +152,14 @@
 2026-04-26 17:42:26 | DEBUG    | app.routers.analysis:run_analysis_pipeline:60 - Explainability: 1ms
 2026-04-26 17:42:26 | INFO     | app.routers.analysis:run_analysis_pipeline:78 - Analysis complete: 1132.2ms, risk=critical, diagnoses=2
 2026-04-26 17:42:26 | INFO     | app.core.logging:dispatch:39 - POST /api/analysis/analyze ΓåÆ 200 (1135.5ms)
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:19 - Environment: development
+starting
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:19 - Environment: development
+alhost:5173']
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:18 - MedQuantum-NIN API v1.0.0 starting
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:19 - Environment: development
+2026-04-26 20:45:01 | INFO     | app.main:lifespan:20 - CORS origins: ['http://localhost:5173']
