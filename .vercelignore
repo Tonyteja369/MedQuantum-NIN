@@ -1,0 +1,15 @@
+# Backend — runs on Render, NOT Vercel
+backend/
+requirements.txt
+Procfile
+runtime.txt
+docker-compose.yml
+.venv/
+data/
+logs/
+output/
+archive/
+tests/
+*.py
+*.pyc
+__pycache__/
