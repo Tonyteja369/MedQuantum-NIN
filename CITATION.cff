@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: MedQuantum-NIN
+message: "If you use this project, please cite it using this metadata."
+type: software
+authors:
+  - family-names: MedQuantum-NIN Team
+doi: 10.0000/placeholder-doi
+repository-code: https://github.com/Tonyteja369/MedQuantum-NIN
+url: https://github.com/Tonyteja369/MedQuantum-NIN
+license: MIT
+version: 1.0.0
+date-released: 2026-07-19
+keywords:
+  - ecg
+  - cardiology
+  - clinical-ai
+  - fastapi
+  - react
+abstract: >-
+  MedQuantum-NIN is an open-source ECG analysis project combining signal
+  preprocessing, rule-based diagnostics, explainability, and report generation.
