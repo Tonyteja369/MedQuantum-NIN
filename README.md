@@ -185,7 +185,7 @@ This project is licensed under the terms of the [MIT License](LICENSE).
 
 ## Citation
 
-If you use this project in research, cite it via [`CITATION.cff`](CITATION.cff).
+ this project in research, cite it via [`CITATION.cff`](CITATION.cff).
 
 ## Contact
 
