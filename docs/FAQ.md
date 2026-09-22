@@ -26,6 +26,10 @@ Use Docker Compose:
 docker compose up --build
 ```
 
+## Can I use Raylight from an MCP client?
+
+Any MCP client can connect. Not listed? Add Raylight as a remote MCP server with this URL. It speaks streamable HTTP and signs you in with your Raylight account.
+
 ## Where are architectural diagrams?
 
 See `docs/Architecture.md` and related docs pages with Mermaid diagrams.
